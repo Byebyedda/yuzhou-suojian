@@ -19,17 +19,22 @@ jobs:
         env:
           ARCHIVE_URL: https://github.com/Byebyedda/yuzhou-suojian/releases/download/v2-preview-20261029/yuzhou-suojian-v2-preview-20261029.zip
           ARCHIVE_SHA256: 0b0e8890a3d9da9c36fa134a209a2b09a4a9b106d8f45e401bde0cca59ca93ac
+          COPY_UPDATE_URL: https://github.com/Byebyedda/yuzhou-suojian/releases/download/v2-preview-20261029-2/yuzhou-suojian-v2-copy-20261029-2.zip
+          COPY_UPDATE_SHA256: 8dc6927b796400c146e09c3bcd26659068217efd60ea8a934cf93a744e6c6d83
         run: |
           curl --fail --location --retry 2 --connect-timeout 20 --max-time 300 "$ARCHIVE_URL" --output "$RUNNER_TEMP/game.zip"
           printf '%s  %s\n' "$ARCHIVE_SHA256" "$RUNNER_TEMP/game.zip" | sha256sum --check --status
           mkdir -p "$RUNNER_TEMP/game"
           unzip -q "$RUNNER_TEMP/game.zip" -d "$RUNNER_TEMP/game"
+          curl --fail --location --retry 2 --connect-timeout 20 --max-time 300 "$COPY_UPDATE_URL" --output "$RUNNER_TEMP/copy-update.zip"
+          printf '%s  %s\n' "$COPY_UPDATE_SHA256" "$RUNNER_TEMP/copy-update.zip" | sha256sum --check --status
+          unzip -qo "$RUNNER_TEMP/copy-update.zip" -d "$RUNNER_TEMP/game"
           python3 - <<'PY'
           import json, os, pathlib
           root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'game'
           manifest = json.loads((root / 'deployment.json').read_text())
           assert manifest['base'] == '/yuzhou-suojian/'
-          assert manifest['sourceCommit'] == '949af9c263ff20db367ac36baf3d885cc97e0593'
+          assert manifest['sourceCommit'] == 'd36a3c7778973dbeecf706625886a3b91c6059b1'
           for route in ['', 'social', 'mail', 'education', 'medical', 'medical/tequan', 'medical/huiguo', 'reset']:
               assert (root / route / 'index.html').is_file(), route
           assert not (root / 'social/editor/index.html').exists()
